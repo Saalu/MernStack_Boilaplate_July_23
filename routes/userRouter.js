@@ -12,20 +12,4 @@ router.post("/login", userCtrl.loginUser);
 
 router.get("/verify", userCtrl.verifiedToken);
 
-// =================================================
-// router.post("/register", sampleUser.userRegister);
-
-// router.post("/login", sampleUser.userLogin);
-
-// router.get("/verify", sampleUser.userToken);
-// ====================================================//
-
-// ==============================================//
-// router.get("/verify", auth, (req, res) => {
-//   console.log(req.user);
-// });
-// router.get("/verify", userAuth, (req, res) => {
-//   console.log(req.user);
-// });
-
 module.exports = router;
