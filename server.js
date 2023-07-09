@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const config = require("./config/key");
 const { hash, compare } = require("bcrypt");
 const { verify, sign } = require("jsonwebtoken");
-
+const { auth } = require("./middleware/auth");
 // =========Imports============
 const User = require("./models/userModel");
 
@@ -17,6 +17,18 @@ app.use(cookieParser());
 //==================================== Routes=========================================================
 app.get("/", (req, res) => {
   res.send("Welcome to Solid Mern Boilaplate");
+});
+
+// ==================Get Token Auth=========
+app.get("/api/users/auth", auth, async (req, res) => {
+  res.json({
+    _id: req._id,
+    isAuth: true,
+    email: req.user.email,
+    name: req.user.username,
+    lastname: req.user.lastname,
+    role: req.user.role,
+  });
 });
 
 // ==================Register User====================
@@ -45,6 +57,7 @@ app.post("/api/users/register", async (req, res) => {
 });
 
 // =========================Login user=================
+
 app.post("/api/users/login", async (req, res) => {
   try {
     // const user = new User(req.body);
@@ -68,7 +81,11 @@ app.post("/api/users/login", async (req, res) => {
       expiresIn: "15m",
     });
 
-    res.json({ success: true, token });
+    user.token = token;
+
+    await user.save();
+
+    res.cookie("x_auth", user.token).json({ loginSuccess: true, user });
   } catch (err) {
     return res.status(500).json({ msg: err.message });
   }
