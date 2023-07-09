@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const config = require("./config/key");
 const { hash, compare } = require("bcrypt");
+const { verify, sign } = require("jsonwebtoken");
 
 // =========Imports============
 const User = require("./models/userModel");
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
   res.send("Welcome to Solid Mern Boilaplate");
 });
 
+// ==================Register User====================
 app.post("/api/users/register", async (req, res) => {
   try {
     // const user = new User(req.body);
@@ -37,6 +39,36 @@ app.post("/api/users/register", async (req, res) => {
     });
     await newUser.save();
     res.json({ success: true, data: newUser });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+});
+
+// =========================Login user=================
+app.post("/api/users/login", async (req, res) => {
+  try {
+    // const user = new User(req.body);
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email: email });
+
+    if (!user)
+      return res
+        .status(401)
+        .json({ loginSuccess: false, msg: "Email not found" });
+
+    const isMatch = await compare(password, user.password);
+    if (!isMatch)
+      return res
+        .status(401)
+        .json({ loginSuccess: false, msg: "Incorrect password" });
+
+    const payload = { id: user._id, name: user.username };
+    const token = sign(payload, config.ACCESS_TOKEN_SECRET, {
+      expiresIn: "15m",
+    });
+
+    res.json({ success: true, token });
   } catch (err) {
     return res.status(500).json({ msg: err.message });
   }
