@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const config = require("./config/key");
+const { hash, compare } = require("bcrypt");
 
 // =========Imports============
 const User = require("./models/userModel");
@@ -19,10 +20,23 @@ app.get("/", (req, res) => {
 
 app.post("/api/users/register", async (req, res) => {
   try {
-    const user = new User(req.body);
-    console.log({ user });
-    await user.save();
-    res.json({ success: true, data: user });
+    // const user = new User(req.body);
+    const { username, lastname, email, password } = req.body;
+
+    const user = await User.findOne({ email: email });
+
+    if (user) return res.status(401).json({ msg: "User already exist" });
+
+    const hashedPassword = await hash(password, 10);
+
+    const newUser = new User({
+      username,
+      lastname,
+      email,
+      password: hashedPassword,
+    });
+    await newUser.save();
+    res.json({ success: true, data: newUser });
   } catch (err) {
     return res.status(500).json({ msg: err.message });
   }
