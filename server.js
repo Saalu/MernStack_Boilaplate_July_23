@@ -4,7 +4,8 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const config = require("./config/key");
 const { hash, compare } = require("bcrypt");
-
+const { verify, sign } = require("jsonwebtoken");
+const { auth } = require("./middleware/auth");
 // =========Imports============
 const User = require("./models/userModel");
 
@@ -18,6 +19,19 @@ app.get("/", (req, res) => {
   res.send("Welcome to Solid Mern Boilaplate");
 });
 
+// ==================Get Token Auth=========
+app.get("/api/users/auth", auth, async (req, res) => {
+  res.json({
+    _id: req._id,
+    isAuth: true,
+    email: req.user.email,
+    name: req.user.username,
+    lastname: req.user.lastname,
+    role: req.user.role,
+  });
+});
+
+// ==================Register User====================
 app.post("/api/users/register", async (req, res) => {
   try {
     // const user = new User(req.body);
@@ -37,6 +51,41 @@ app.post("/api/users/register", async (req, res) => {
     });
     await newUser.save();
     res.json({ success: true, data: newUser });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+});
+
+// =========================Login user=================
+
+app.post("/api/users/login", async (req, res) => {
+  try {
+    // const user = new User(req.body);
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email: email });
+
+    if (!user)
+      return res
+        .status(401)
+        .json({ loginSuccess: false, msg: "Email not found" });
+
+    const isMatch = await compare(password, user.password);
+    if (!isMatch)
+      return res
+        .status(401)
+        .json({ loginSuccess: false, msg: "Incorrect password" });
+
+    const payload = { id: user._id, name: user.username };
+    const token = sign(payload, config.ACCESS_TOKEN_SECRET, {
+      expiresIn: "15m",
+    });
+
+    user.token = token;
+
+    await user.save();
+
+    res.cookie("x_auth", user.token).json({ loginSuccess: true, user });
   } catch (err) {
     return res.status(500).json({ msg: err.message });
   }
