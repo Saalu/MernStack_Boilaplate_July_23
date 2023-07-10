@@ -18,7 +18,9 @@ const auth = (req, res, next) => {
       req.token = token;
       next();
     });
-  } catch (err) {}
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
 };
 
 module.exports = { auth };

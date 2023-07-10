@@ -21,14 +21,15 @@ app.get("/", (req, res) => {
 
 // ==================Get Token Auth=========
 app.get("/api/users/auth", auth, async (req, res) => {
+  // res.json(req.user);
   res.json({
-    _id: req._id,
+    _id: req.user.id,
     isAuth: true,
-    email: req.user.email,
-    name: req.user.username,
-    lastname: req.user.lastname,
-    role: req.user.role,
+    name: req.user.name,
   });
+  //   lastname: req.user.lastname,
+  //   email: req.user.email,
+  //   role: req.user.role,
 });
 
 // ==================Register User====================
@@ -91,6 +92,19 @@ app.post("/api/users/login", async (req, res) => {
   }
 });
 
+app.get("/api/user/logout", auth, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(
+      { _id: req.user.id },
+      { token: "" },
+      { new: true }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, msg: err.message });
+  }
+});
 // =======Mongo Connection===========
 // const URI = process.env.MONGODB_URI;
 mongoose
