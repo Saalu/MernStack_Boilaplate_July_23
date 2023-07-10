@@ -16,7 +16,8 @@ function Login({ setIsLogin }) {
     };
     try {
       const res = await axios.post("api/users/login", payload);
-      console.log({ Username: res.data.user.username, Id: res.data.user._id });
+      setErr(res.data.msg);
+
       setIsLogin(true);
       localStorage.setItem("tokenStore", res.data.user.token);
     } catch (err) {

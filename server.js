@@ -92,7 +92,23 @@ app.post("/api/users/login", async (req, res) => {
   }
 });
 
-app.get("/api/user/logout", auth, async (req, res) => {
+// =========================Logout user=================
+
+app.get("/api/users/logout", auth, async (req, res) => {
+  try {
+    res.clearCookie("x_auth");
+    await User.findByIdAndUpdate(
+      { _id: req.user.id },
+      { token: "" },
+      { new: true }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, msg: err.message });
+  }
+});
+app.get("/api/users/logout", auth, async (req, res) => {
   try {
     await User.findByIdAndUpdate(
       { _id: req.user.id },
@@ -103,6 +119,27 @@ app.get("/api/user/logout", auth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ success: false, msg: err.message });
+  }
+});
+
+// =============verify Token==============
+
+app.get("/api/users/verify", async (req, res) => {
+  try {
+    const token = req.cookies.x_auth;
+    if (!token) return res.send(false);
+
+    verify(token, config.ACCESS_TOKEN_SECRET, async (err, verified) => {
+      if (err) return res.send(false);
+
+      const user = await User.findById(verified.id);
+
+      if (!user) return res.send(false);
+
+      return res.send(true);
+    });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
   }
 });
 // =======Mongo Connection===========

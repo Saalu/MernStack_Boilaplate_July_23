@@ -12,7 +12,14 @@ const auth = (req, res, next) => {
         .json({ isAuth: false, error: true, msg: "Invalid Authentication" });
 
     jwt.verify(token, config.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (err) return res.status(400).json({ msg: "Authorization not valid." });
+      if (err)
+        return res
+          .status(400)
+          .json({
+            isAuth: false,
+            error: true,
+            msg: "Authorization not valid.",
+          });
 
       req.user = user;
       req.token = token;
