@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { navigate, Link } from "@reach/router";
+import { UserContext } from "../../App";
 
 function Login({ setIsLogin }) {
+  // const [userInfo, setuserInfo] = useContext(UserContext);
+  const [userInfo, setuserInfo] = useContext(UserContext);
+
   const [user, setUser] = useState({
     email: "",
     password: "",
   });
   const [err, setErr] = useState("");
-  // const history = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,13 +22,13 @@ function Login({ setIsLogin }) {
     try {
       const res = await axios.post("api/users/login", payload);
       // setErr(res.data.loginSuccess);
-      console.log({ login: res.data });
+      setuserInfo(res.data.user);
       setIsLogin(res.data.loginSuccess);
       localStorage.setItem("tokenStore", res.data.user.token);
       navigate("/");
     } catch (err) {
       // err.response.data.msg && setErr(err.response.data.msg);
-      console.log(err.response);
+      console.log({ Error: err.response });
     }
   };
   const handleChange = (e) => {
@@ -38,6 +41,10 @@ function Login({ setIsLogin }) {
     setIsLogin(true);
     navigate("/");
   };
+
+  useEffect(() => {
+    console.log(userInfo);
+  }, [userInfo]);
 
   return (
     <div className="container">
